@@ -1,0 +1,206 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+  <title>Happy Birthday — Akanksha!</title>
+  <style>
+    :root{
+      --bg1:#0f172a;
+      --bg2:#06202b;
+      --card:#0b1220;
+      --accent:#ff6b6b;
+      --accent2:#ffd166;
+    }
+    html,body{height:100%;margin:0;font-family:Inter,system-ui,Segoe UI,Roboto,'Helvetica Neue',Arial}
+    body{
+      background: radial-gradient(1200px 600px at 10% 20%, rgba(255,107,107,0.06), transparent),
+                  linear-gradient(180deg,var(--bg1),var(--bg2));
+      color:#e6eef8;overflow:hidden;
+      display:flex;align-items:center;justify-content:center;padding:20px;
+    }
+
+    .stars{position:fixed;inset:0;pointer-events:none}
+    .star{position:absolute;width:4px;height:4px;border-radius:50%;background:rgba(255,255,255,0.08);box-shadow:0 0 10px rgba(255,255,255,0.07);}
+
+    .card{
+      width:100%;
+      max-width:1000px;
+      background:linear-gradient(135deg, rgba(255,255,255,0.03), rgba(255,255,255,0.02));
+      border-radius:18px;padding:20px;box-shadow:0 8px 30px rgba(2,6,23,0.7);backdrop-filter:blur(6px);
+      display:grid;grid-template-columns:1fr 420px;gap:20px;align-items:center;position:relative;overflow:visible
+    }
+
+    .left{padding:10px}
+    h1{margin:0;font-size:clamp(24px,5vw,42px);letter-spacing:-0.02em}
+    .sub{color:#bcd6ff88;margin-top:8px;font-size:clamp(14px,3vw,18px)}
+
+    .wish{
+      margin-top:16px;font-size:clamp(14px,4vw,18px);line-height:1.4;max-width:60ch;color:#eaf2ff
+    }
+
+    .type{display:inline-block;border-right:2px solid rgba(255,255,255,0.2);padding-right:4px;white-space:nowrap;overflow:hidden}
+
+    .controls{margin-top:20px;display:flex;gap:10px;flex-wrap:wrap}
+    .btn{background:linear-gradient(90deg,var(--accent),#ff8fa3);border:0;padding:10px 14px;border-radius:10px;color:#091127;cursor:pointer;font-weight:700;font-size:clamp(12px,3.5vw,16px)}
+    .btn.ghost{background:transparent;border:1px solid rgba(255,255,255,0.06);color:var(--accent2)}
+
+    .stage{position:relative;height:280px;display:flex;align-items:center;justify-content:center}
+    .balloon{width:100px;height:140px;border-radius:60% 60% 50% 50%;position:absolute;transform-origin:center bottom}
+    .balloon:after{content:"";position:absolute;left:50%;bottom:-18px;width:2px;height:40px;background:linear-gradient(#333, #111);transform:translateX(-50%)}
+    .b1{background:linear-gradient(180deg,#ff7eb6,#ff6b6b);left:24%;animation:float1 6s ease-in-out infinite}
+    .b2{background:linear-gradient(180deg,#ffd166,#ffb347);left:52%;animation:float2 5.6s ease-in-out infinite}
+    .b3{background:linear-gradient(180deg,#9be15d,#00e3ae);left:78%;animation:float3 6.6s ease-in-out infinite}
+
+    @keyframes float1{0%{transform:translateY(0) rotate(-3deg)}50%{transform:translateY(-20px) rotate(3deg)}100%{transform:translateY(0) rotate(-3deg)}}
+    @keyframes float2{0%{transform:translateY(0) rotate(2deg)}50%{transform:translateY(-28px) rotate(-2deg)}100%{transform:translateY(0) rotate(2deg)}}
+    @keyframes float3{0%{transform:translateY(0) rotate(-1deg)}50%{transform:translateY(-22px) rotate(2deg)}100%{transform:translateY(0) rotate(-1deg)}}
+
+    .footer{position:absolute;right:12px;bottom:10px;color:#9fb7db66;font-size:clamp(10px,2.5vw,12px)}
+
+    @media (max-width:880px){
+      .card{grid-template-columns:1fr;max-width:100%;}
+      .stage{height:200px}
+    }
+    @media (max-width:480px){
+      body{padding:10px}
+      .stage{height:160px}
+      .balloon{width:70px;height:100px}
+    }
+
+    #confettiCanvas{position:fixed;inset:0;pointer-events:none;z-index:999}
+    #fireworks{position:fixed;inset:0;pointer-events:none;z-index:998}
+    .sparkle{position:absolute;width:10px;height:10px;border-radius:50%;background:radial-gradient(circle,#fff,#ffd166);filter:blur(6px);opacity:0.9}
+  </style>
+</head>
+<body>
+  <div class="stars" id="stars"></div>
+
+  <div class="card" role="main">
+    <div class="left">
+      <h1>Happy Birthday, <span style="color:var(--accent2)">Akanksha</span>! 🎉</h1>
+      <div class="sub">A special wish just for you from Sunny</div>
+
+      <p class="wish">Hi <strong>Akanksha</strong> —</p><span class="type" id="typed"></span></p>
+
+      <div class="controls">
+        <button class="btn" id="confettiBtn">Throw Confetti 🎊</button>
+        <button class="btn ghost" id="fireBtn">Fireworks ✨</button>
+        <button class="btn ghost" id="musicBtn">Play Music ♪</button>
+      </div>
+
+      <div style="margin-top:14px;color:#bcd6ff88">Message from Sunny: <strong>Very Very Happy Returns Of The Day Butkiii 🥳. "teri ummer bhi muje lag jaye ea vala HePpY BiRthDay 😂! "</strong></div>
+      <div class="footer">Click confetti or fireworks</div>
+    </div>
+
+    <div class="stage">
+      <div class="balloon b1"></div>
+      <div class="balloon b2"></div>
+      <div class="balloon b3"></div>
+    </div>
+  </div>
+
+  <canvas id="confettiCanvas"></canvas>
+  <canvas id="fireworks"></canvas>
+
+  <audio id="bgMusic" loop>
+    <source src="data:audio/mpeg;base64,//uQZAAAAAAAAAAAAAAAAAAAAAAAWGluZwAAAA8AAAACAAACcQCA..." type="audio/mpeg">
+  </audio>
+
+  <script>
+    const lines = [
+      "Butki , Chudail , Chidiya ",
+      "May your day be filled with laughter, cake and dancing.",
+    
+    ];
+    const typedEl = document.getElementById('typed');
+    let li=0, idx=0;
+    function typeLoop(){
+      const str = lines[li];
+      if(idx<=str.length){
+        typedEl.textContent = str.slice(0,idx);
+        idx++;
+        setTimeout(typeLoop, 45 + Math.random()*60);
+      } else {
+        setTimeout(()=>{ idx=0; li=(li+1)%lines.length; setTimeout(typeLoop,600); },1500);
+      }
+    }
+    typeLoop();
+
+    const stars = document.getElementById('stars');
+    for(let i=0;i<40;i++){
+      const s = document.createElement('div'); s.className='star';
+      s.style.left = Math.random()*100+'%'; s.style.top = Math.random()*100+'%';
+      const size = 2+Math.random()*4; s.style.width = s.style.height = size+'px';
+      s.style.opacity = 0.05+Math.random()*0.6; stars.appendChild(s);
+    }
+
+    const confettiCanvas = document.getElementById('confettiCanvas');
+    const cctx = confettiCanvas.getContext('2d');
+    let confetti = [];
+    function resizeCan(){confettiCanvas.width = innerWidth; confettiCanvas.height = innerHeight; fireworks.width = innerWidth; fireworks.height = innerHeight}
+    const colors = ['#ff6b6b','#ffd166','#8bd3ff','#9be15d','#c38cff'];
+
+    function spawnConfetti(x,y,count=60){
+      for(let i=0;i<count;i++){
+        confetti.push({x:x,y:y, vx:(Math.random()-0.5)*8, vy:Math.random()*-12-4, r:2+Math.random()*5, color:colors[Math.floor(Math.random()*colors.length)], rot:Math.random()*360, vr: (Math.random()-0.5)*10})
+      }
+    }
+    function updateConfetti(){
+      cctx.clearRect(0,0,confettiCanvas.width,confettiCanvas.height);
+      for(let i=confetti.length-1;i>=0;i--){
+        const p=confetti[i]; p.vy+=0.35; p.x+=p.vx; p.y+=p.vy; p.rot+=p.vr;
+        cctx.save(); cctx.translate(p.x,p.y); cctx.rotate(p.rot*Math.PI/180);
+        cctx.fillStyle = p.color; cctx.fillRect(-p.r/2,-p.r/2,p.r,p.r*1.6);
+        cctx.restore();
+        if(p.y>confettiCanvas.height+60) confetti.splice(i,1);
+      }
+      requestAnimationFrame(updateConfetti);
+    }
+    updateConfetti();
+
+    const fireworks = document.getElementById('fireworks');
+    const fctx = fireworks.getContext('2d');
+    let rockets = [], particles=[];
+    function launchFirework(x,y){
+      rockets.push({x:Math.random()*innerWidth, y:innerHeight+20, tx:x, ty:y, vy:-6- Math.random()*4, vx:(x-innerWidth/2)/200});
+    }
+    function explode(x,y){
+      const count = 30 + Math.floor(Math.random()*30);
+      for(let i=0;i<count;i++){
+        particles.push({x:x,y:y, vx:(Math.random()-0.5)*6, vy:(Math.random()-0.5)*6, life:60+Math.random()*50, color: colors[Math.floor(Math.random()*colors.length)]});
+      }
+    }
+    function updateFire(){
+      fctx.clearRect(0,0,fireworks.width,fireworks.height);
+      for(let i=rockets.length-1;i>=0;i--){
+        const r=rockets[i]; r.x+=r.vx; r.y+=r.vy; r.vy+=0.08; fctx.beginPath(); fctx.arc(r.x,r.y,2,0,Math.PI*2); fctx.fillStyle='#fff'; fctx.fill();
+        if(r.y<=r.ty){ explode(r.x,r.y); rockets.splice(i,1); }
+      }
+      for(let i=particles.length-1;i>=0;i--){
+        const p=particles[i]; p.vy+=0.06; p.x+=p.vx; p.y+=p.vy; p.life--; fctx.globalAlpha = Math.max(0,p.life/110);
+        fctx.beginPath(); fctx.arc(p.x,p.y,2,0,Math.PI*2); fctx.fillStyle=p.color; fctx.fill(); if(p.life<=0) particles.splice(i,1);
+      }
+      fctx.globalAlpha=1; requestAnimationFrame(updateFire);
+    }
+    updateFire();
+
+    document.getElementById('confettiBtn').addEventListener('click', ()=>{ spawnConfetti(innerWidth/2, innerHeight/3, 140); });
+    document.getElementById('fireBtn').addEventListener('click', ()=>{ for(let i=0;i<5;i++){ setTimeout(()=>launchFirework(Math.random()*innerWidth*0.9+innerWidth*0.05, Math.random()*innerHeight*0.6+40), i*250)} });
+
+    const music = document.getElementById('bgMusic');
+    const musicBtn = document.getElementById('musicBtn');
+    let musicOn=false;
+    musicBtn.addEventListener('click', ()=>{
+      if(!musicOn){ music.play().catch(()=>{}); musicBtn.textContent='Pause Music ♪'; musicOn=true } else { music.pause(); musicBtn.textContent='Play Music ♪'; musicOn=false }
+    });
+
+    window.addEventListener('click',(ev)=>{ spawnConfetti(ev.clientX, ev.clientY, 30); const sp = document.createElement('div'); sp.className='sparkle'; sp.style.left=ev.clientX-6+'px'; sp.style.top=ev.clientY-6+'px'; document.body.appendChild(sp); setTimeout(()=>sp.remove(),700) });
+
+    addEventListener('resize', resizeCan); resizeCan();
+
+    setTimeout(()=>{ spawnConfetti(innerWidth/2, innerHeight/3, 90); for(let i=0;i<3;i++){ setTimeout(()=>launchFirework(Math.random()*innerWidth, Math.random()*innerHeight*0.6+40), i*300) } },900);
+
+  </script>
+</body>
+</html>

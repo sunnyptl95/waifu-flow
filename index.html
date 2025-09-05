@@ -23,7 +23,7 @@ APIs used (public/free):
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>WaifuFlow — Infinite Anime Wallpaper</title>
-  <meta name="description" content="Infinite-scrolling waifu images with smooth UI/UX animations — auto-fetching from free APIs." />
+  <meta name="description" content="Infinite-scrolling waifu images (SFW + NSFW) with smooth UI/UX animations — auto-fetching from free APIs." />
 
   <style>
     :root{
@@ -50,14 +50,12 @@ APIs used (public/free):
     .sub{font-size:12px;color:var(--muted)}
 
     .controls{margin-left:auto;display:flex;gap:10px;align-items:center}
-    .btn{background:var(--glass);border:1px solid rgba(255,255,255,0.03);padding:8px 12px;border-radius:10px;cursor:pointer;font-weight:600}
+    .btn{background:var(--glass);border:1px solid rgba(255,255,255,0.03);padding:8px 12px;border-radius:10px;cursor:pointer;font-weight:600;transition:.3s}
     .btn.secondary{background:transparent;border:1px solid rgba(255,255,255,0.06);color:var(--muted)}
+    .btn:hover{opacity:.85}
 
     main{padding:20px;max-width:1200px;margin:20px auto}
-
-    .grid{
-      display:grid; grid-template-columns: repeat(auto-fill, minmax(200px,1fr)); gap:14px;
-    }
+    .grid{display:grid; grid-template-columns: repeat(auto-fill, minmax(200px,1fr)); gap:14px;}
 
     .card{
       background:linear-gradient(180deg, rgba(255,255,255,0.02), transparent);
@@ -70,38 +68,84 @@ APIs used (public/free):
     .meta{padding:10px 12px; display:flex; justify-content:space-between; align-items:center}
     .meta .tag{font-size:13px;color:var(--muted)}
     .meta .actions{display:flex;gap:8px}
-    .action{background:rgba(255,255,255,0.02);border-radius:10px;padding:6px 8px;font-size:13px;border:1px solid rgba(255,255,255,0.03);cursor:pointer}
+
+    /* Styled Open/Download buttons */
+    .action.open{
+      background: var(--accent);
+      border: none;
+      color: #fff;
+      border-radius:10px;
+      padding:6px 10px;
+      cursor:pointer;
+      transition: all 0.3s ease;
+    }
+    .action.open:hover{ box-shadow: 0 0 12px var(--accent); }
+
+    .action.download{
+      background: linear-gradient(135deg,#7c5cff,#ff7ab6);
+      border: none;
+      color: #fff;
+      border-radius:10px;
+      padding:6px 10px;
+      cursor:pointer;
+      transition: all 0.3s ease;
+    }
+    .action.download:hover{ box-shadow: 0 0 14px #ff7ab6; }
 
     .loader{display:grid;place-items:center;padding:40px 0;color:var(--muted)}
     .small{font-size:13px;color:var(--muted)}
 
-    /* entrance animation */
     .fade-in{opacity:0; transform:translateY(8px) scale(.995); animation:enter .6s forwards cubic-bezier(.2,.9,.2,1)}
     @keyframes enter{to{opacity:1;transform:none}}
 
-    /* tilt effect */
     .tilt{transform-style:preserve-3d; perspective:800px}
 
-    /* responsive tweaks */
-    @media (max-width:640px){ 
-      .thumbnail{height:200px} 
-      header{padding:10px; flex-direction:column; align-items:flex-start}
-      .controls{margin-left:0; width:100%; justify-content:space-between}
-    }
-
-    /* subtle floating background shapes */
     .bg-shape{position:fixed;pointer-events:none;z-index:0;filter:blur(40px);opacity:0.12}
     .shape1{width:520px;height:520px;left:-140px;top:-120px;background:radial-gradient(circle at 20% 20%, #7c5cff,#ff7ab6)}
     .shape2{width:420px;height:420px;right:-120px;bottom:-80px;background:radial-gradient(circle at 10% 10%, #00d4ff,#7c5cff)}
 
-    /* About modal */
-    .modal{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,0.6);z-index:100}
-    .modal.active{display:flex}
-    .modal-content{background:var(--card);padding:20px;border-radius:16px;max-width:400px;width:90%;box-shadow:0 12px 40px rgba(0,0,0,0.6);text-align:center}
-    .modal-content img{width:80px;height:80px;border-radius:50%;margin-bottom:12px}
+    /* Modal styles */
+    .modal{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,0.65);z-index:200}
+    .modal.active{display:flex;animation:fadeIn .4s ease;}
+    @keyframes fadeIn{from{opacity:0}to{opacity:1}}
+
+    .modal-content{
+      background:var(--card);padding:24px;border-radius:16px;
+      max-width:420px;width:90%;box-shadow:0 12px 40px rgba(0,0,0,0.6);
+      text-align:center;animation:scaleIn .4s ease;
+    }
+    @keyframes scaleIn{from{transform:scale(.85);opacity:0}to{transform:scale(1);opacity:1}}
+
+    .modal-content img{width:90px;height:90px;border-radius:50%;margin-bottom:12px}
     .modal-content h2{margin:0 0 10px}
     .modal-content p{margin:6px 0;font-size:14px;color:var(--muted)}
-    .close-btn{margin-top:16px;padding:8px 14px;border-radius:10px;background:var(--accent);border:none;color:#fff;cursor:pointer;font-weight:600}
+    .close-btn{margin-top:16px;padding:8px 14px;border-radius:10px;background:var(--accent);border:none;color:#fff;cursor:pointer;font-weight:600;transition:.3s}
+    .close-btn:hover{opacity:.85}
+
+    /* Responsive fixes */
+    @media (max-width:1024px){
+      main{padding:14px}
+      .grid{gap:12px}
+      .thumbnail{height:220px}
+    }
+    @media (max-width:768px){
+      header{flex-wrap:wrap;gap:10px}
+      .logo{flex:1}
+      .controls{flex:1;justify-content:flex-end}
+      .grid{grid-template-columns: repeat(auto-fill, minmax(160px,1fr))}
+      .thumbnail{height:200px}
+    }
+    @media (max-width:480px){
+      header{flex-direction:column;align-items:flex-start;gap:8px}
+      .controls{width:100%;justify-content:space-between}
+      .site-title{font-size:14px}
+      .sub{font-size:11px}
+      .grid{grid-template-columns: repeat(auto-fill, minmax(140px,1fr))}
+      .thumbnail{height:160px}
+      .meta{flex-direction:column;gap:6px;align-items:flex-start}
+      .meta .actions{width:100%;justify-content:space-between}
+      .action.open, .action.download{flex:1;text-align:center;padding:8px}
+    }
   </style>
 </head>
 <body>
@@ -119,12 +163,11 @@ APIs used (public/free):
 
     <div class="controls">
       <select id="styleSelect" class="btn secondary" title="Choose style">
-        <option value="waifu">Waifu</option>
-        <option value="neko">Neko</option>
-        <option value="maid">Maid</option>
+        <option value="sfw">SFW</option>
+        <option value="nsfw">NSFW</option>
       </select>
       <button id="refreshBtn" class="btn">Refresh</button>
-      <button id="aboutBtn" class="btn secondary">About</button>
+      <button id="infoBtn" class="btn secondary">Info</button>
     </div>
   </header>
 
@@ -133,27 +176,7 @@ APIs used (public/free):
     <div id="loader" class="loader small">Loading more images…</div>
   </main>
 
-  <!-- About Modal -->
-  <div id="aboutModal" class="modal">
-    <div class="modal-content">
-      <img src="https://avatars.githubusercontent.com/u/9919?s=200&v=4" alt="Developer" />
-      <h2>About This Website</h2>
-      <p></p><p></p>
-      <p><strong>Developer:</strong>Sunny Patel</p>
-      <p></p>
-      <p></p>
-      <p><strong>Details:</strong> WaifuFlow streams anime images using public APIs like waifu.pics, nekos.life, and waifu.im. Built with modern UI/UX and responsive design.</p>
-      <p></p>
-      <p></p>
-      <p><strong>Privacy Policy:</strong> We don’t store or collect user data. All images are fetched directly from third-party APIs.</p>
-      <p></p>
-      <p></p>
-      <p><strong>Website Info:</strong> Pure HTML/CSS/JS single-page app. Works on desktop & mobile. Educational/demo purpose only.</p>
-      <button class="close-btn"><a class="close-btn" href="https://t.me/JUST7D5">Contact</a></button>
-      <button class="close-btn" id="closeModal">Close</button>
-    </div>
-  </div>
-
+  <!-- Template -->
   <template id="cardTpl">
     <div class="card fade-in tilt">
       <img class="thumbnail" loading="lazy" alt="anime wallpaper" />
@@ -167,115 +190,129 @@ APIs used (public/free):
     </div>
   </template>
 
+  <!-- NSFW Warning Modal -->
+  <div id="nsfwWarning" class="modal">
+    <div class="modal-content">
+      <h2>NSFW Content Warning</h2>
+      <p>This section may contain sensitive or adult content. Are you 18+?</p>
+      <button class="close-btn" id="confirmNSFW">Yes, I’m 18+</button>
+      <button class="close-btn" id="cancelNSFW" style="background:#ff4d6d">Cancel</button>
+    </div>
+  </div>
+
+  <!-- Info Modal -->
+  <div id="infoModal" class="modal">
+    <div class="modal-content">
+      <img src="https://avatars.githubusercontent.com/u/9919?s=200&v=4" alt="Developer" />
+      <h2>Developer Info</h2>
+      <p><strong>Name:</strong> Sunny Patel</p>
+      <p><strong>Website:</strong> WaifuFlow — Infinite Anime Wallpaper</p>
+      <p><strong>Privacy Policy:</strong> No data stored. All images fetched from APIs.</p>
+      <button class="close-btn"><a class="close-btn" href="https://t.me/JUST7D5" target="_blank">Contact</a></button>
+      <button class="close-btn" id="closeInfo">Close</button>
+    </div>
+  </div>
+
   <script>
-    // Configuration
     const BATCH_SIZE = 20;
     let isLoading = false;
     let page = 0;
-    let currentStyle = 'waifu';
+    let currentMode = 'sfw'; 
 
     const grid = document.getElementById('grid');
     const loader = document.getElementById('loader');
     const tpl = document.getElementById('cardTpl');
 
-    document.getElementById('refreshBtn').addEventListener('click', ()=>{ resetAndLoad() });
-    document.getElementById('styleSelect').addEventListener('change', (e)=>{ currentStyle = e.target.value; resetAndLoad() });
+    const styleSelect = document.getElementById('styleSelect');
+    const nsfwWarning = document.getElementById('nsfwWarning');
 
-    const aboutModal = document.getElementById('aboutModal');
-    document.getElementById('aboutBtn').addEventListener('click', ()=>{
-      aboutModal.classList.add('active');
-    });
-    document.getElementById('closeModal').addEventListener('click', ()=>{
-      aboutModal.classList.remove('active');
+    styleSelect.addEventListener('change', (e)=>{
+      if(e.target.value === 'nsfw'){
+        nsfwWarning.classList.add('active');
+      } else {
+        currentMode = 'sfw';
+        resetAndLoad();
+      }
     });
 
-    // Intersection Observer to trigger loading more
+    document.getElementById('confirmNSFW').addEventListener('click', ()=>{
+      currentMode = 'nsfw';
+      nsfwWarning.classList.remove('active');
+      resetAndLoad();
+    });
+
+    document.getElementById('cancelNSFW').addEventListener('click', ()=>{
+      styleSelect.value = 'sfw';
+      nsfwWarning.classList.remove('active');
+    });
+
+    document.getElementById('refreshBtn').addEventListener('click', ()=> resetAndLoad());
+
     const obs = new IntersectionObserver(entries=>{
       if(entries[0].isIntersecting && !isLoading){ loadMore(); }
     },{rootMargin:'400px'});
     obs.observe(loader);
 
-    // Utility: try multiple public APIs to retrieve an image URL
-    async function fetchWaifuSingle(style){
+    async function fetchWaifuSingle(mode){
       const candidates = [
         async ()=>{
-          const res = await fetch(`https://api.waifu.pics/sfw/${style}`);
+          const res = await fetch(`https://api.waifu.pics/${mode}/waifu`);
           if(!res.ok) throw new Error('waifu.pics fail');
-          const j = await res.json();
-          return j.url || j.file || null;
-        },
-        async ()=>{
-          const res = await fetch(`https://api.waifu.pics/many/sfw/${style}`);
-          if(!res.ok) throw new Error('waifu.pics many fail');
-          const j = await res.json();
-          if(j && j.files && j.files.length) return j.files[0];
-          return null;
-        },
-        async ()=>{
-          const res = await fetch('https://nekos.life/api/v2/img/waifu');
-          if(!res.ok) throw new Error('nekos.life fail');
           const j = await res.json();
           return j.url || null;
         },
         async ()=>{
-          const res = await fetch('https://api.waifu.im/search/?is_nsfw=false&many=true');
+          const res = await fetch(`https://api.waifu.im/search/?included_tags=waifu&is_nsfw=${mode==='nsfw'}&many=true`);
           if(!res.ok) throw new Error('waifu.im fail');
           const j = await res.json();
           if(j && j.images && j.images.length) return j.images[0].url;
           return null;
         }
       ];
-
       for(const fn of candidates){
         try{
           const url = await fn();
           if(url) return url;
-        }catch(e){ }
+        }catch(e){}
       }
-      throw new Error('All image sources failed');
+      return null;
     }
 
-    // load a batch of images
     async function loadMore(){
       isLoading = true; loader.textContent = 'Loading more images…';
       const frag = document.createDocumentFragment();
       const promises = [];
       for(let i=0;i<BATCH_SIZE;i++){
-        promises.push(fetchWaifuSingle(currentStyle).catch(e=>null));
+        promises.push(fetchWaifuSingle(currentMode).catch(e=>null));
       }
       const results = await Promise.all(promises);
-      let added = 0;
+      let added=0;
       for(const url of results){
         if(!url) continue;
         const node = tpl.content.cloneNode(true);
         const card = node.querySelector('.card');
         const img = node.querySelector('.thumbnail');
         const tag = node.querySelector('.tag');
-        tag.textContent = '#'+currentStyle;
+        tag.textContent = '#'+currentMode;
         img.src = url;
-        img.alt = currentStyle + ' wallpaper';
+        img.alt = currentMode+' wallpaper';
 
         node.querySelector('.open').addEventListener('click', ()=> window.open(url,'_blank'));
         node.querySelector('.download').addEventListener('click', ()=> downloadImage(url));
 
-        card.addEventListener('pointermove', (ev)=>{
+        card.addEventListener('pointermove',(ev)=>{
           const r = card.getBoundingClientRect();
-          const px = (ev.clientX - r.left) / r.width - 0.5;
-          const py = (ev.clientY - r.top) / r.height - 0.5;
-          card.style.transform = `rotateX(${(-py*6).toFixed(2)}deg) rotateY(${(px*8).toFixed(2)}deg) translateY(-6px)`;
+          const px = (ev.clientX-r.left)/r.width-0.5;
+          const py = (ev.clientY-r.top)/r.height-0.5;
+          card.style.transform=`rotateX(${(-py*6).toFixed(2)}deg) rotateY(${(px*8).toFixed(2)}deg) translateY(-6px)`;
         });
-        card.addEventListener('pointerleave', ()=>{ card.style.transform = '' });
+        card.addEventListener('pointerleave',()=>{card.style.transform='';});
 
         frag.appendChild(node);
         added++;
       }
-      if(added===0){ loader.textContent = 'No images available — try refresh or change style.'; }
-      else{ loader.textContent = 'Scroll to load more'; }
+      loader.textContent = added===0 ? 'No images available' : 'Scroll to load more';
       grid.appendChild(frag);
-
-      const newCards = Array.from(grid.querySelectorAll('.card')).slice(-added);
-      newCards.forEach((c,i)=>{ c.style.animationDelay = (i*60)+'ms'; });
-
       isLoading = false;
       page++;
     }
@@ -285,15 +322,16 @@ APIs used (public/free):
     }
 
     function downloadImage(url){
-      const a = document.createElement('a'); a.href = url; a.download = url.split('/').pop().split('?')[0];
-      document.body.appendChild(a); a.click(); a.remove();
+      const a=document.createElement('a');a.href=url;a.download=url.split('/').pop().split('?')[0];
+      document.body.appendChild(a);a.click();a.remove();
     }
 
     resetAndLoad();
 
-    document.addEventListener('keydown',(e)=>{
-      if(e.key==='r'){ resetAndLoad(); }
-    });
+    // Info modal JS
+    const infoModal = document.getElementById('infoModal');
+    document.getElementById('infoBtn').addEventListener('click', ()=> infoModal.classList.add('active'));
+    document.getElementById('closeInfo').addEventListener('click', ()=> infoModal.classList.remove('active'));
   </script>
 </body>
 </html>

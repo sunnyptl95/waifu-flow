@@ -1,206 +1,299 @@
+<!--
+Anime Waifu Auto-Fetch Website
+Single-file HTML with CSS + JS
+Features:
+ - Dark, modern UI/UX themed design
+ - Animated entry effects, hover tilt, subtle parallax
+ - Infinite scroll (Intersection Observer)
+ - Auto-fetch from multiple free waifu/nekos APIs with graceful fallback
+ - Lazy loading, download & open buttons
+ - About modal with developer info and privacy policy
+ - Fully responsive mobile view
+
+APIs used (public/free):
+ - https://api.waifu.pics
+ - https://nekos.life
+ - https://api.waifu.im
+
+-->
+
 <!doctype html>
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
-  <title>Happy Birthday — Akanksha!</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>WaifuFlow — Infinite Anime Wallpaper</title>
+  <meta name="description" content="Infinite-scrolling waifu images with smooth UI/UX animations — auto-fetching from free APIs." />
+
   <style>
     :root{
-      --bg1:#0f172a;
-      --bg2:#06202b;
-      --card:#0b1220;
-      --accent:#ff6b6b;
-      --accent2:#ffd166;
+      --bg:#0b1020; --card:#0f1724; --muted:#a0acc0; --accent:#7c5cff; --glass: rgba(255,255,255,0.03);
     }
-    html,body{height:100%;margin:0;font-family:Inter,system-ui,Segoe UI,Roboto,'Helvetica Neue',Arial}
+    *{box-sizing:border-box}
+    html,body{height:100%}
     body{
-      background: radial-gradient(1200px 600px at 10% 20%, rgba(255,107,107,0.06), transparent),
-                  linear-gradient(180deg,var(--bg1),var(--bg2));
-      color:#e6eef8;overflow:hidden;
-      display:flex;align-items:center;justify-content:center;padding:20px;
+      margin:0;padding:0;font-family:Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+      background: radial-gradient(1200px 600px at 10% 10%, rgba(124,92,255,0.08), transparent),
+                  linear-gradient(180deg, #06070a 0%, var(--bg) 100%);
+      color:#e6eef8; -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale;
     }
 
-    .stars{position:fixed;inset:0;pointer-events:none}
-    .star{position:absolute;width:4px;height:4px;border-radius:50%;background:rgba(255,255,255,0.08);box-shadow:0 0 10px rgba(255,255,255,0.07);}
+    header{
+      position:sticky; top:0; z-index:40; backdrop-filter: blur(8px);
+      background: linear-gradient(180deg, rgba(10,12,20,0.5), rgba(10,12,20,0.25));
+      border-bottom:1px solid rgba(255,255,255,0.03);
+      padding:12px 20px; display:flex; align-items:center; gap:16px;
+    }
+    .logo{display:flex; gap:12px; align-items:center}
+    .logo .mark{width:44px;height:44px;border-radius:10px;background:linear-gradient(135deg,var(--accent),#ff7ab6);display:grid;place-items:center;font-weight:700}
+    .site-title{font-weight:700;font-size:16px;letter-spacing:0.2px}
+    .sub{font-size:12px;color:var(--muted)}
+
+    .controls{margin-left:auto;display:flex;gap:10px;align-items:center}
+    .btn{background:var(--glass);border:1px solid rgba(255,255,255,0.03);padding:8px 12px;border-radius:10px;cursor:pointer;font-weight:600}
+    .btn.secondary{background:transparent;border:1px solid rgba(255,255,255,0.06);color:var(--muted)}
+
+    main{padding:20px;max-width:1200px;margin:20px auto}
+
+    .grid{
+      display:grid; grid-template-columns: repeat(auto-fill, minmax(200px,1fr)); gap:14px;
+    }
 
     .card{
-      width:100%;
-      max-width:1000px;
-      background:linear-gradient(135deg, rgba(255,255,255,0.03), rgba(255,255,255,0.02));
-      border-radius:18px;padding:20px;box-shadow:0 8px 30px rgba(2,6,23,0.7);backdrop-filter:blur(6px);
-      display:grid;grid-template-columns:1fr 420px;gap:20px;align-items:center;position:relative;overflow:visible
+      background:linear-gradient(180deg, rgba(255,255,255,0.02), transparent);
+      border-radius:14px; overflow:hidden; position:relative; box-shadow: 0 6px 20px rgba(2,6,23,0.6);
+      transform-origin:center; transition:transform .25s ease, box-shadow .25s ease; border:1px solid rgba(255,255,255,0.03);
+    }
+    .card:hover{transform:translateY(-8px) scale(1.01); box-shadow: 0 18px 40px rgba(2,6,23,0.7)}
+
+    .thumbnail{width:100%;height:260px;object-fit:cover;display:block;background:linear-gradient(180deg,#0a0d14,#0f1724)}
+    .meta{padding:10px 12px; display:flex; justify-content:space-between; align-items:center}
+    .meta .tag{font-size:13px;color:var(--muted)}
+    .meta .actions{display:flex;gap:8px}
+    .action{background:rgba(255,255,255,0.02);border-radius:10px;padding:6px 8px;font-size:13px;border:1px solid rgba(255,255,255,0.03);cursor:pointer}
+
+    .loader{display:grid;place-items:center;padding:40px 0;color:var(--muted)}
+    .small{font-size:13px;color:var(--muted)}
+
+    /* entrance animation */
+    .fade-in{opacity:0; transform:translateY(8px) scale(.995); animation:enter .6s forwards cubic-bezier(.2,.9,.2,1)}
+    @keyframes enter{to{opacity:1;transform:none}}
+
+    /* tilt effect */
+    .tilt{transform-style:preserve-3d; perspective:800px}
+
+    /* responsive tweaks */
+    @media (max-width:640px){ 
+      .thumbnail{height:200px} 
+      header{padding:10px; flex-direction:column; align-items:flex-start}
+      .controls{margin-left:0; width:100%; justify-content:space-between}
     }
 
-    .left{padding:10px}
-    h1{margin:0;font-size:clamp(24px,5vw,42px);letter-spacing:-0.02em}
-    .sub{color:#bcd6ff88;margin-top:8px;font-size:clamp(14px,3vw,18px)}
+    /* subtle floating background shapes */
+    .bg-shape{position:fixed;pointer-events:none;z-index:0;filter:blur(40px);opacity:0.12}
+    .shape1{width:520px;height:520px;left:-140px;top:-120px;background:radial-gradient(circle at 20% 20%, #7c5cff,#ff7ab6)}
+    .shape2{width:420px;height:420px;right:-120px;bottom:-80px;background:radial-gradient(circle at 10% 10%, #00d4ff,#7c5cff)}
 
-    .wish{
-      margin-top:16px;font-size:clamp(14px,4vw,18px);line-height:1.4;max-width:60ch;color:#eaf2ff
-    }
-
-    .type{display:inline-block;border-right:2px solid rgba(255,255,255,0.2);padding-right:4px;white-space:nowrap;overflow:hidden}
-
-    .controls{margin-top:20px;display:flex;gap:10px;flex-wrap:wrap}
-    .btn{background:linear-gradient(90deg,var(--accent),#ff8fa3);border:0;padding:10px 14px;border-radius:10px;color:#091127;cursor:pointer;font-weight:700;font-size:clamp(12px,3.5vw,16px)}
-    .btn.ghost{background:transparent;border:1px solid rgba(255,255,255,0.06);color:var(--accent2)}
-
-    .stage{position:relative;height:280px;display:flex;align-items:center;justify-content:center}
-    .balloon{width:100px;height:140px;border-radius:60% 60% 50% 50%;position:absolute;transform-origin:center bottom}
-    .balloon:after{content:"";position:absolute;left:50%;bottom:-18px;width:2px;height:40px;background:linear-gradient(#333, #111);transform:translateX(-50%)}
-    .b1{background:linear-gradient(180deg,#ff7eb6,#ff6b6b);left:24%;animation:float1 6s ease-in-out infinite}
-    .b2{background:linear-gradient(180deg,#ffd166,#ffb347);left:52%;animation:float2 5.6s ease-in-out infinite}
-    .b3{background:linear-gradient(180deg,#9be15d,#00e3ae);left:78%;animation:float3 6.6s ease-in-out infinite}
-
-    @keyframes float1{0%{transform:translateY(0) rotate(-3deg)}50%{transform:translateY(-20px) rotate(3deg)}100%{transform:translateY(0) rotate(-3deg)}}
-    @keyframes float2{0%{transform:translateY(0) rotate(2deg)}50%{transform:translateY(-28px) rotate(-2deg)}100%{transform:translateY(0) rotate(2deg)}}
-    @keyframes float3{0%{transform:translateY(0) rotate(-1deg)}50%{transform:translateY(-22px) rotate(2deg)}100%{transform:translateY(0) rotate(-1deg)}}
-
-    .footer{position:absolute;right:12px;bottom:10px;color:#9fb7db66;font-size:clamp(10px,2.5vw,12px)}
-
-    @media (max-width:880px){
-      .card{grid-template-columns:1fr;max-width:100%;}
-      .stage{height:200px}
-    }
-    @media (max-width:480px){
-      body{padding:10px}
-      .stage{height:160px}
-      .balloon{width:70px;height:100px}
-    }
-
-    #confettiCanvas{position:fixed;inset:0;pointer-events:none;z-index:999}
-    #fireworks{position:fixed;inset:0;pointer-events:none;z-index:998}
-    .sparkle{position:absolute;width:10px;height:10px;border-radius:50%;background:radial-gradient(circle,#fff,#ffd166);filter:blur(6px);opacity:0.9}
+    /* About modal */
+    .modal{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,0.6);z-index:100}
+    .modal.active{display:flex}
+    .modal-content{background:var(--card);padding:20px;border-radius:16px;max-width:400px;width:90%;box-shadow:0 12px 40px rgba(0,0,0,0.6);text-align:center}
+    .modal-content img{width:80px;height:80px;border-radius:50%;margin-bottom:12px}
+    .modal-content h2{margin:0 0 10px}
+    .modal-content p{margin:6px 0;font-size:14px;color:var(--muted)}
+    .close-btn{margin-top:16px;padding:8px 14px;border-radius:10px;background:var(--accent);border:none;color:#fff;cursor:pointer;font-weight:600}
   </style>
 </head>
 <body>
-  <div class="stars" id="stars"></div>
+  <div class="bg-shape shape1"></div>
+  <div class="bg-shape shape2"></div>
 
-  <div class="card" role="main">
-    <div class="left">
-      <h1>Happy Birthday, <span style="color:var(--accent2)">Akanksha</span>! 🎉</h1>
-      <div class="sub">A special wish just for you from Sunny</div>
-
-      <p class="wish">Hi <strong>Akanksha</strong> —</p><span class="type" id="typed"></span></p>
-
-      <div class="controls">
-        <button class="btn" id="confettiBtn">Throw Confetti 🎊</button>
-        <button class="btn ghost" id="fireBtn">Fireworks ✨</button>
-        <button class="btn ghost" id="musicBtn">Play Music ♪</button>
+  <header>
+    <div class="logo">
+      <div class="mark">WF</div>
+      <div>
+        <div class="site-title">WaifuFlow</div>
+        <div class="sub">Infinite waifu stream</div>
       </div>
-
-      <div style="margin-top:14px;color:#bcd6ff88">Message from Sunny: <strong>Very Very Happy Returns Of The Day Butkiii 🥳. "teri ummer bhi muje lag jaye ea vala HePpY BiRthDay 😂! "</strong></div>
-      <div class="footer">Click confetti or fireworks</div>
     </div>
 
-    <div class="stage">
-      <div class="balloon b1"></div>
-      <div class="balloon b2"></div>
-      <div class="balloon b3"></div>
+    <div class="controls">
+      <select id="styleSelect" class="btn secondary" title="Choose style">
+        <option value="waifu">Waifu</option>
+        <option value="neko">Neko</option>
+        <option value="maid">Maid</option>
+      </select>
+      <button id="refreshBtn" class="btn">Refresh</button>
+      <button id="aboutBtn" class="btn secondary">About</button>
+    </div>
+  </header>
+
+  <main>
+    <div id="grid" class="grid" aria-live="polite"></div>
+    <div id="loader" class="loader small">Loading more images…</div>
+  </main>
+
+  <!-- About Modal -->
+  <div id="aboutModal" class="modal">
+    <div class="modal-content">
+      <img src="https://avatars.githubusercontent.com/u/9919?s=200&v=4" alt="Developer" />
+      <h2>About This Website</h2>
+      <p></p><p></p>
+      <p><strong>Developer:</strong>Sunny Patel</p>
+      <p></p>
+      <p></p>
+      <p><strong>Details:</strong> WaifuFlow streams anime images using public APIs like waifu.pics, nekos.life, and waifu.im. Built with modern UI/UX and responsive design.</p>
+      <p></p>
+      <p></p>
+      <p><strong>Privacy Policy:</strong> We don’t store or collect user data. All images are fetched directly from third-party APIs.</p>
+      <p></p>
+      <p></p>
+      <p><strong>Website Info:</strong> Pure HTML/CSS/JS single-page app. Works on desktop & mobile. Educational/demo purpose only.</p>
+      <button class="close-btn"><a class="close-btn" href="https://t.me/JUST7D5">Contact</a></button>
+      <button class="close-btn" id="closeModal">Close</button>
     </div>
   </div>
 
-  <canvas id="confettiCanvas"></canvas>
-  <canvas id="fireworks"></canvas>
-
-  <audio id="bgMusic" loop>
-    <source src="data:audio/mpeg;base64,//uQZAAAAAAAAAAAAAAAAAAAAAAAWGluZwAAAA8AAAACAAACcQCA..." type="audio/mpeg">
-  </audio>
+  <template id="cardTpl">
+    <div class="card fade-in tilt">
+      <img class="thumbnail" loading="lazy" alt="anime wallpaper" />
+      <div class="meta">
+        <div class="tag">#waifu</div>
+        <div class="actions">
+          <button class="action open">Open</button>
+          <button class="action download">Download</button>
+        </div>
+      </div>
+    </div>
+  </template>
 
   <script>
-    const lines = [
-      "Butki , Chudail , Chidiya ",
-      "May your day be filled with laughter, cake and dancing.",
-    
-    ];
-    const typedEl = document.getElementById('typed');
-    let li=0, idx=0;
-    function typeLoop(){
-      const str = lines[li];
-      if(idx<=str.length){
-        typedEl.textContent = str.slice(0,idx);
-        idx++;
-        setTimeout(typeLoop, 45 + Math.random()*60);
-      } else {
-        setTimeout(()=>{ idx=0; li=(li+1)%lines.length; setTimeout(typeLoop,600); },1500);
-      }
-    }
-    typeLoop();
+    // Configuration
+    const BATCH_SIZE = 20;
+    let isLoading = false;
+    let page = 0;
+    let currentStyle = 'waifu';
 
-    const stars = document.getElementById('stars');
-    for(let i=0;i<40;i++){
-      const s = document.createElement('div'); s.className='star';
-      s.style.left = Math.random()*100+'%'; s.style.top = Math.random()*100+'%';
-      const size = 2+Math.random()*4; s.style.width = s.style.height = size+'px';
-      s.style.opacity = 0.05+Math.random()*0.6; stars.appendChild(s);
-    }
+    const grid = document.getElementById('grid');
+    const loader = document.getElementById('loader');
+    const tpl = document.getElementById('cardTpl');
 
-    const confettiCanvas = document.getElementById('confettiCanvas');
-    const cctx = confettiCanvas.getContext('2d');
-    let confetti = [];
-    function resizeCan(){confettiCanvas.width = innerWidth; confettiCanvas.height = innerHeight; fireworks.width = innerWidth; fireworks.height = innerHeight}
-    const colors = ['#ff6b6b','#ffd166','#8bd3ff','#9be15d','#c38cff'];
+    document.getElementById('refreshBtn').addEventListener('click', ()=>{ resetAndLoad() });
+    document.getElementById('styleSelect').addEventListener('change', (e)=>{ currentStyle = e.target.value; resetAndLoad() });
 
-    function spawnConfetti(x,y,count=60){
-      for(let i=0;i<count;i++){
-        confetti.push({x:x,y:y, vx:(Math.random()-0.5)*8, vy:Math.random()*-12-4, r:2+Math.random()*5, color:colors[Math.floor(Math.random()*colors.length)], rot:Math.random()*360, vr: (Math.random()-0.5)*10})
-      }
-    }
-    function updateConfetti(){
-      cctx.clearRect(0,0,confettiCanvas.width,confettiCanvas.height);
-      for(let i=confetti.length-1;i>=0;i--){
-        const p=confetti[i]; p.vy+=0.35; p.x+=p.vx; p.y+=p.vy; p.rot+=p.vr;
-        cctx.save(); cctx.translate(p.x,p.y); cctx.rotate(p.rot*Math.PI/180);
-        cctx.fillStyle = p.color; cctx.fillRect(-p.r/2,-p.r/2,p.r,p.r*1.6);
-        cctx.restore();
-        if(p.y>confettiCanvas.height+60) confetti.splice(i,1);
-      }
-      requestAnimationFrame(updateConfetti);
-    }
-    updateConfetti();
-
-    const fireworks = document.getElementById('fireworks');
-    const fctx = fireworks.getContext('2d');
-    let rockets = [], particles=[];
-    function launchFirework(x,y){
-      rockets.push({x:Math.random()*innerWidth, y:innerHeight+20, tx:x, ty:y, vy:-6- Math.random()*4, vx:(x-innerWidth/2)/200});
-    }
-    function explode(x,y){
-      const count = 30 + Math.floor(Math.random()*30);
-      for(let i=0;i<count;i++){
-        particles.push({x:x,y:y, vx:(Math.random()-0.5)*6, vy:(Math.random()-0.5)*6, life:60+Math.random()*50, color: colors[Math.floor(Math.random()*colors.length)]});
-      }
-    }
-    function updateFire(){
-      fctx.clearRect(0,0,fireworks.width,fireworks.height);
-      for(let i=rockets.length-1;i>=0;i--){
-        const r=rockets[i]; r.x+=r.vx; r.y+=r.vy; r.vy+=0.08; fctx.beginPath(); fctx.arc(r.x,r.y,2,0,Math.PI*2); fctx.fillStyle='#fff'; fctx.fill();
-        if(r.y<=r.ty){ explode(r.x,r.y); rockets.splice(i,1); }
-      }
-      for(let i=particles.length-1;i>=0;i--){
-        const p=particles[i]; p.vy+=0.06; p.x+=p.vx; p.y+=p.vy; p.life--; fctx.globalAlpha = Math.max(0,p.life/110);
-        fctx.beginPath(); fctx.arc(p.x,p.y,2,0,Math.PI*2); fctx.fillStyle=p.color; fctx.fill(); if(p.life<=0) particles.splice(i,1);
-      }
-      fctx.globalAlpha=1; requestAnimationFrame(updateFire);
-    }
-    updateFire();
-
-    document.getElementById('confettiBtn').addEventListener('click', ()=>{ spawnConfetti(innerWidth/2, innerHeight/3, 140); });
-    document.getElementById('fireBtn').addEventListener('click', ()=>{ for(let i=0;i<5;i++){ setTimeout(()=>launchFirework(Math.random()*innerWidth*0.9+innerWidth*0.05, Math.random()*innerHeight*0.6+40), i*250)} });
-
-    const music = document.getElementById('bgMusic');
-    const musicBtn = document.getElementById('musicBtn');
-    let musicOn=false;
-    musicBtn.addEventListener('click', ()=>{
-      if(!musicOn){ music.play().catch(()=>{}); musicBtn.textContent='Pause Music ♪'; musicOn=true } else { music.pause(); musicBtn.textContent='Play Music ♪'; musicOn=false }
+    const aboutModal = document.getElementById('aboutModal');
+    document.getElementById('aboutBtn').addEventListener('click', ()=>{
+      aboutModal.classList.add('active');
+    });
+    document.getElementById('closeModal').addEventListener('click', ()=>{
+      aboutModal.classList.remove('active');
     });
 
-    window.addEventListener('click',(ev)=>{ spawnConfetti(ev.clientX, ev.clientY, 30); const sp = document.createElement('div'); sp.className='sparkle'; sp.style.left=ev.clientX-6+'px'; sp.style.top=ev.clientY-6+'px'; document.body.appendChild(sp); setTimeout(()=>sp.remove(),700) });
+    // Intersection Observer to trigger loading more
+    const obs = new IntersectionObserver(entries=>{
+      if(entries[0].isIntersecting && !isLoading){ loadMore(); }
+    },{rootMargin:'400px'});
+    obs.observe(loader);
 
-    addEventListener('resize', resizeCan); resizeCan();
+    // Utility: try multiple public APIs to retrieve an image URL
+    async function fetchWaifuSingle(style){
+      const candidates = [
+        async ()=>{
+          const res = await fetch(`https://api.waifu.pics/sfw/${style}`);
+          if(!res.ok) throw new Error('waifu.pics fail');
+          const j = await res.json();
+          return j.url || j.file || null;
+        },
+        async ()=>{
+          const res = await fetch(`https://api.waifu.pics/many/sfw/${style}`);
+          if(!res.ok) throw new Error('waifu.pics many fail');
+          const j = await res.json();
+          if(j && j.files && j.files.length) return j.files[0];
+          return null;
+        },
+        async ()=>{
+          const res = await fetch('https://nekos.life/api/v2/img/waifu');
+          if(!res.ok) throw new Error('nekos.life fail');
+          const j = await res.json();
+          return j.url || null;
+        },
+        async ()=>{
+          const res = await fetch('https://api.waifu.im/search/?is_nsfw=false&many=true');
+          if(!res.ok) throw new Error('waifu.im fail');
+          const j = await res.json();
+          if(j && j.images && j.images.length) return j.images[0].url;
+          return null;
+        }
+      ];
 
-    setTimeout(()=>{ spawnConfetti(innerWidth/2, innerHeight/3, 90); for(let i=0;i<3;i++){ setTimeout(()=>launchFirework(Math.random()*innerWidth, Math.random()*innerHeight*0.6+40), i*300) } },900);
+      for(const fn of candidates){
+        try{
+          const url = await fn();
+          if(url) return url;
+        }catch(e){ }
+      }
+      throw new Error('All image sources failed');
+    }
 
+    // load a batch of images
+    async function loadMore(){
+      isLoading = true; loader.textContent = 'Loading more images…';
+      const frag = document.createDocumentFragment();
+      const promises = [];
+      for(let i=0;i<BATCH_SIZE;i++){
+        promises.push(fetchWaifuSingle(currentStyle).catch(e=>null));
+      }
+      const results = await Promise.all(promises);
+      let added = 0;
+      for(const url of results){
+        if(!url) continue;
+        const node = tpl.content.cloneNode(true);
+        const card = node.querySelector('.card');
+        const img = node.querySelector('.thumbnail');
+        const tag = node.querySelector('.tag');
+        tag.textContent = '#'+currentStyle;
+        img.src = url;
+        img.alt = currentStyle + ' wallpaper';
+
+        node.querySelector('.open').addEventListener('click', ()=> window.open(url,'_blank'));
+        node.querySelector('.download').addEventListener('click', ()=> downloadImage(url));
+
+        card.addEventListener('pointermove', (ev)=>{
+          const r = card.getBoundingClientRect();
+          const px = (ev.clientX - r.left) / r.width - 0.5;
+          const py = (ev.clientY - r.top) / r.height - 0.5;
+          card.style.transform = `rotateX(${(-py*6).toFixed(2)}deg) rotateY(${(px*8).toFixed(2)}deg) translateY(-6px)`;
+        });
+        card.addEventListener('pointerleave', ()=>{ card.style.transform = '' });
+
+        frag.appendChild(node);
+        added++;
+      }
+      if(added===0){ loader.textContent = 'No images available — try refresh or change style.'; }
+      else{ loader.textContent = 'Scroll to load more'; }
+      grid.appendChild(frag);
+
+      const newCards = Array.from(grid.querySelectorAll('.card')).slice(-added);
+      newCards.forEach((c,i)=>{ c.style.animationDelay = (i*60)+'ms'; });
+
+      isLoading = false;
+      page++;
+    }
+
+    function resetAndLoad(){
+      grid.innerHTML=''; page=0; loader.textContent='Loading more images…'; loadMore();
+    }
+
+    function downloadImage(url){
+      const a = document.createElement('a'); a.href = url; a.download = url.split('/').pop().split('?')[0];
+      document.body.appendChild(a); a.click(); a.remove();
+    }
+
+    resetAndLoad();
+
+    document.addEventListener('keydown',(e)=>{
+      if(e.key==='r'){ resetAndLoad(); }
+    });
   </script>
 </body>
 </html>
